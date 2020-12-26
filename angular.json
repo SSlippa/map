@@ -28,9 +28,16 @@
               "src/assets"
             ],
             "styles": [
+              "node_modules/primeng/resources/themes/saga-blue/theme.css",
+              "node_modules/primeng/resources/primeng.min.css",
+              "node_modules/primeicons/primeicons.css",
+              "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css",
+              "mapbox-gl/dist/mapbox-gl.css",
               "src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [
+              "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.js"
+            ]
           },
           "configurations": {
             "production": {

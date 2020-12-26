@@ -1,0 +1,15 @@
+<p-virtualScroller [value]="itemsList$ | async"
+                   [scrollHeight]="'calc(100vh - 90px)'"
+                   [itemSize]="70">
+  <ng-template pTemplate="item" let-annotate>
+    <div class="annotation-wrapper">
+      <div class="annotation"
+           [class.active]="annotate.isActive"
+           (click)="onItemClick(annotate)">
+        {{annotate.name}}
+      </div>
+      <button pButton [label]="'X'" (click)="deleteItem(annotate)" class="p-button-outlined p-button-danger"></button>
+    </div>
+
+  </ng-template>
+</p-virtualScroller>
