@@ -62,18 +62,6 @@ export class MapService {
   constructor(private http: HttpClient, private annotationService: AnnotationEntityService) {
   }
 
-  addDrawFunctionality(): void {
-    this.draw = new MapboxDraw({
-      displayControlsDefault: false,
-      controls: {
-        polygon: true,
-        point: true,
-        line_string: true
-      }
-    });
-    this.map.addControl(this.draw, 'top-left');
-  }
-
   createMap(): void {
     this.map = new Map({
       accessToken: environment.mapbox.accessToken,
@@ -91,11 +79,22 @@ export class MapService {
 
   }
 
+  addDrawFunctionality(): void {
+    this.draw = new MapboxDraw({
+      displayControlsDefault: false,
+      controls: {
+        polygon: true,
+        point: true,
+        line_string: true
+      }
+    });
+    this.map.addControl(this.draw, 'top-left');
+  }
+
   addListeners(): void {
     this.map.on('draw.selectionchange', (e) => {
-      console.log('e', e);
       const id = e.features[0]?.id;
-      this.updateActiveOnList(id);
+      this.updateAnnotation(id);
     });
 
     fromEvent(this.map, 'draw.create').pipe(map((event: IDrawCreateEvent) => event.features[0])).subscribe((createdEl) => {
@@ -149,12 +148,11 @@ export class MapService {
     this.annotationService.addOneToCache(annotation);
   }
 
-
   searchPlaceByText(place: string): Observable<any> {
     this.marker?.remove();
-    return this.http.get(`https://api.mapbox.com/geocoding/v5/mapbox.places/${place}.json?
+    return this.http.get<MapboxOutput>(`https://api.mapbox.com/geocoding/v5/mapbox.places/${place}.json?
     types=address&access_token=${environment.mapbox.accessToken}`).pipe(
-      map((res: MapboxOutput) => res.features),
+      map((res) => res.features),
       tap(searchedData => {
         this.setMarkerAndFit(searchedData);
       })
@@ -162,8 +160,8 @@ export class MapService {
   }
 
   searchPlaceByCoordinates(coords: number[], type = 'poi'): Observable<any> {
-    return this.http.get(`https://api.mapbox.com/geocoding/v5/mapbox.places/${coords.join(',')}.json?types=${type}&language=en&&access_token=${environment.mapbox.accessToken}`).pipe(
-      map(point => point['features'][0])
+    return this.http.get<MapboxOutput>(`https://api.mapbox.com/geocoding/v5/mapbox.places/${coords.join(',')}.json?types=${type}&language=en&&access_token=${environment.mapbox.accessToken}`).pipe(
+      map(point => point.features[0])
     );
   }
 
@@ -172,7 +170,12 @@ export class MapService {
     this.marker = new Marker()
       .setLngLat([searchedData[0].center[0], searchedData[0].center[1]])
       .addTo(this.map);
-    this.fitToArea(searchedData[0].bbox);
+    if (searchedData[0].bbox) {
+      this.fitToArea(searchedData[0].bbox);
+    }
+    else {
+      this.fitToPoint(searchedData[0].center);
+    }
   }
 
   fitToArea(coords): void {
@@ -193,7 +196,7 @@ export class MapService {
   }
 
   flyTo(annotation: IAnnotation): void {
-    this.updateActiveOnList(annotation.id);
+    this.updateAnnotation(annotation.id);
     this.selectOnMap(annotation.id);
 
     switch (annotation.type) {
@@ -207,7 +210,7 @@ export class MapService {
     }
   }
 
-  updateActiveOnList(id: string): void {
+  updateAnnotation(id: string): void {
     if (id) {
       const previousSelection = {
         id: this.activeId,
@@ -235,7 +238,7 @@ export class MapService {
     }
   }
 
-  deleteAnnotation(id: string): void {
+  deleteAnnotationFromStore(id: string): void {
     this.draw.delete(id);
     this.annotationService.removeOneFromCache(id);
   }

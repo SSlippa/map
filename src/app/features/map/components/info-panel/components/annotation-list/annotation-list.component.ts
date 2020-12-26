@@ -20,7 +20,7 @@ export class AnnotationListComponent implements OnInit {
   }
 
   deleteItem(item: IAnnotation): void {
-    this.mapService.deleteAnnotation(item.id);
+    this.mapService.deleteAnnotationFromStore(item.id);
   }
 
 }
