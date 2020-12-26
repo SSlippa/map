@@ -41,8 +41,8 @@ export const reducers: ActionReducerMap<AppState> = {
     BrowserAnimationsModule,
     RouterModule.forRoot(routes),
     HttpClientModule,
-    StoreDevtoolsModule.instrument({maxAge: 25, logOnly: environment.production}),
     StoreModule.forRoot(reducers),
+    StoreDevtoolsModule.instrument({maxAge: 25, logOnly: environment.production}),
     EntityDataModule.forRoot({}),
     EffectsModule.forRoot([]),
     StoreRouterConnectingModule.forRoot({
