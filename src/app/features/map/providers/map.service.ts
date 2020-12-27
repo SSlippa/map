@@ -8,44 +8,7 @@ import MapboxDraw from '@mapbox/mapbox-gl-draw';
 
 import { environment } from '../../../../environments/environment';
 import { AnnotationEntityService } from './annotation-entity.service';
-
-export enum AnnotationType {
-  Point = 'Point',
-  LineString = 'LineString',
-  Polygon = 'Polygon'
-}
-
-export interface MapboxOutput {
-  attribution: string;
-  features: Feature[];
-  query: [];
-}
-
-export interface Feature {
-  place_name: string;
-}
-
-export interface IDrawCreateEvent {
-  features: {
-    geometry: {
-      coordinates: any;
-      type: string;
-    },
-    properties: {},
-    type: string,
-    id: string
-  }[];
-  target: {};
-  type: string;
-}
-
-export interface IAnnotation {
-  id: string;
-  coordinates: [];
-  name: string;
-  type: AnnotationType;
-  isActive: boolean;
-}
+import { AnnotationType, IAnnotation, IDrawCreateEvent, MapboxOutput } from '../models';
 
 @Injectable({
   providedIn: 'root'
@@ -100,40 +63,52 @@ export class MapService {
     fromEvent(this.map, 'draw.create').pipe(map((event: IDrawCreateEvent) => event.features[0])).subscribe((createdEl) => {
       switch (createdEl.geometry.type) {
         case AnnotationType.Point: {
-          const [lng, lat] = createdEl.geometry.coordinates;
-          this.searchPlaceByCoordinates([lng, lat]).subscribe(point => {
-            this.addToStore(createdEl.id, point.geometry.coordinates, point.place_name, createdEl.geometry.type);
-          });
+          this.onPointCreate(createdEl);
           break;
         }
 
         case AnnotationType.Polygon: {
-          const bounds = createdEl.geometry.coordinates[0].reduce((bound, coord) => {
-            return bound.extend(coord);
-          }, new LngLatBounds(createdEl.geometry.coordinates[0][0], createdEl.geometry.coordinates[0][0]));
-
-          const polygonBounds = new LngLatBounds(createdEl.geometry.coordinates[0]);
-          const coords = polygonBounds.getCenter().toArray();
-
-          this.searchPlaceByCoordinates(coords).subscribe(data => {
-            this.addToStore(createdEl.id, bounds, `Polygon Center: ${data.text}`, createdEl.geometry.type);
-          });
+          this.onPolygonCreate(createdEl);
           break;
         }
 
         case AnnotationType.LineString: {
-          const firstEndPoint = this.searchPlaceByCoordinates(createdEl.geometry.coordinates[0]);
-          const secondEndPoint = this.searchPlaceByCoordinates(createdEl.geometry.coordinates[createdEl.geometry.coordinates.length - 1]);
-          forkJoin([firstEndPoint, secondEndPoint]).subscribe(data => {
-            const name = `Line: ${data[0].text} - ${data[1].text}`;
-            const coords = createdEl.geometry.coordinates.reduce((bounds, coord) => {
-              return bounds.extend(coord);
-            }, new LngLatBounds(createdEl.geometry.coordinates[0], createdEl.geometry.coordinates[0]));
-            this.addToStore(createdEl.id, coords, name, createdEl.geometry.type);
-          });
+          this.onLineStringCreate(createdEl);
           break;
         }
       }
+    });
+  }
+
+  onPointCreate(createdEl): void {
+    const [lng, lat] = createdEl.geometry.coordinates;
+    this.searchPlaceByCoordinates([lng, lat]).subscribe(point => {
+      this.addToStore(createdEl.id, point.geometry.coordinates, point.place_name, createdEl.geometry.type);
+    });
+  }
+
+  onPolygonCreate(createdEl): void {
+    const bounds = createdEl.geometry.coordinates[0].reduce((bound, coord) => {
+      return bound.extend(coord);
+    }, new LngLatBounds(createdEl.geometry.coordinates[0][0], createdEl.geometry.coordinates[0][0]));
+
+    const polygonBounds = new LngLatBounds(createdEl.geometry.coordinates[0]);
+    const coords = polygonBounds.getCenter().toArray();
+
+    this.searchPlaceByCoordinates(coords).subscribe(data => {
+      this.addToStore(createdEl.id, bounds, `Polygon Center: ${data.text}`, createdEl.geometry.type);
+    });
+  }
+
+  onLineStringCreate(createdEl): void {
+    const firstEndPoint = this.searchPlaceByCoordinates(createdEl.geometry.coordinates[0]);
+    const secondEndPoint = this.searchPlaceByCoordinates(createdEl.geometry.coordinates[createdEl.geometry.coordinates.length - 1]);
+    forkJoin([firstEndPoint, secondEndPoint]).subscribe(data => {
+      const name = `Line: ${data[0].text} - ${data[1].text}`;
+      const coords = createdEl.geometry.coordinates.reduce((bounds, coord) => {
+        return bounds.extend(coord);
+      }, new LngLatBounds(createdEl.geometry.coordinates[0], createdEl.geometry.coordinates[0]));
+      this.addToStore(createdEl.id, coords, name, createdEl.geometry.type);
     });
   }
 

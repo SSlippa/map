@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { IAnnotation, MapService } from '../../providers/map.service';
+import { MapService } from '../../providers/map.service';
 import { Observable } from 'rxjs';
+
 import { AnnotationEntityService } from '../../providers/annotation-entity.service';
-import { tap } from 'rxjs/operators';
+import { IAnnotation } from '../../models';
 
 @Component({
   selector: 'app-info-panel',

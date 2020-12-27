@@ -1,9 +1,9 @@
 <div class="search-row">
-  <span class="p-input-icon-left">
+  <span class="p-input-icon-left search-input">
     <i class="pi pi-search"></i>
     <input type="text" pInputText [(ngModel)]="searchText" placeholder="Search">
   </span>
-  <button pButton type="button" label="Search" (click)="searchPlace()"></button>
+  <button pButton type="submit" label="Search" (click)="searchPlace()"></button>
 </div>
 <app-annotation-list [itemsList$]="annotationList$"></app-annotation-list>
 

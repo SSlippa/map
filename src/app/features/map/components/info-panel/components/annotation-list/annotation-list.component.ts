@@ -1,5 +1,9 @@
 import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
-import { IAnnotation, MapService } from '../../../../providers/map.service';
+
+import { Observable } from 'rxjs';
+
+import { IAnnotation } from '../../../../models';
+import { MapService } from '../../../../providers/map.service';
 
 @Component({
   selector: 'app-annotation-list',
@@ -7,7 +11,7 @@ import { IAnnotation, MapService } from '../../../../providers/map.service';
   styleUrls: ['./annotation-list.component.scss']
 })
 export class AnnotationListComponent implements OnInit {
-  @Input() itemsList$;
+  @Input() itemsList$: Observable<IAnnotation[]>;
   @Output() itemClicked = new EventEmitter<IAnnotation>();
 
   constructor(private mapService: MapService) { }
